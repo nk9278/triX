@@ -29,8 +29,8 @@ if (session_status() === PHP_SESSION_NONE) {
             </button>
             <div class="brand-logo fw-bold fs-4">TriX</div>
             <div class="d-flex align-items-center gap-3">
-                <i class="bi bi-bell fs-5 text-white"></i>
-                <i class="bi bi-person-circle fs-5 text-white"></i>
+                <a href="notifications.php" class="text-white"><i class="bi bi-bell fs-5"></i></a>
+                <a href="profile.php" class="text-white"><i class="bi bi-person-circle fs-5"></i></a>
             </div>
         </div>
     </header>
@@ -67,6 +67,11 @@ if (session_status() === PHP_SESSION_NONE) {
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="logs.php"><i class="bi bi-clock-history me-2"></i> Login Logs</a>
                     </li>
+                    <?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] < 6): ?>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="settings.php"><i class="bi bi-gear me-2"></i> Settings</a>
+                    </li>
+                    <?php endif; ?>
                     <li class="nav-item mt-5">
                         <a class="nav-link text-danger rounded p-3 bg-dark-subtle" href="/logout.php"><i class="bi bi-box-arrow-right me-2"></i> Logout</a>
                     </li>

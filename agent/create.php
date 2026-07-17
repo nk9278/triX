@@ -10,7 +10,7 @@ $new_username = '';
 $new_password = '';
 $new_name = '';
 
-// Agent creates Admin (Role 2)
+// Super Admin creates Admin (Role 2)
 $child_role_id = 6;
 $child_role_name = 'User';
 
@@ -37,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'password' => $hashed_password
             ])) {
                 $success = true;
+                log_activity($pdo, $_SESSION['user_id'], 'Account Created', 'Created new ' . $child_role_name . ' account: ' . $new_username);
             } else {
                 $error = "Failed to create account.";
             }

@@ -26,12 +26,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $new_status = $target_user['status'] === 'active' ? 'inactive' : 'active';
                 $update = $pdo->prepare("UPDATE users SET status = :status WHERE id = :id");
                 $update->execute(['status' => $new_status, 'id' => $user_id]);
+                log_activity($pdo, $_SESSION['user_id'], 'Status Changed', 'Changed status of ' . $target_user['username'] . ' to ' . $new_status);
                 $success_msg = "User status updated to " . ucfirst($new_status) . ".";
             } elseif ($action === 'reset_password') {
                 $new_pwd = generate_password();
                 $hashed_password = password_hash($new_pwd, PASSWORD_DEFAULT);
                 $update = $pdo->prepare("UPDATE users SET password = :password WHERE id = :id");
                 $update->execute(['password' => $hashed_password, 'id' => $user_id]);
+                log_activity($pdo, $_SESSION['user_id'], 'Password Reset', 'Reset password for ' . $target_user['username']);
                 $success_msg = "Password reset for " . $target_user['username'];
             }
         } else {
@@ -40,12 +42,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Super Agent sees Admins (Role 2)
+// Super Admin sees Admins (Role 2)
 $child_role_id = 5;
 $child_role_name = 'Agents';
 
-$stmt = $pdo->prepare("SELECT id, name, username, status, created_at FROM users WHERE parent_id = :parent_id AND role_id = :role_id ORDER BY id DESC");
-$stmt->execute(['parent_id' => $_SESSION['user_id'], 'role_id' => $child_role_id]);
+// Filters & Search
+$search = $_GET['search'] ?? '';
+$status = $_GET['status'] ?? 'all';
+
+$query = "SELECT u.id, u.name, u.username, u.status, u.created_at, u.role_id,
+         (SELECT login_time FROM login_logs WHERE user_id = u.id ORDER BY id DESC LIMIT 1) as last_login
+         FROM users u WHERE u.parent_id = :parent_id AND u.role_id = :role_id";
+$params = ['parent_id' => $_SESSION['user_id'], 'role_id' => $child_role_id];
+
+if (!empty($search)) {
+    $query .= " AND (u.name LIKE :search OR u.username LIKE :search)";
+    $params['search'] = "%$search%";
+}
+
+if ($status === 'active') {
+    $query .= " AND u.status = 'active'";
+} elseif ($status === 'inactive') {
+    $query .= " AND u.status = 'inactive'";
+}
+
+$query .= " ORDER BY u.id DESC";
+
+$stmt = $pdo->prepare($query);
+$stmt->execute($params);
 $users = $stmt->fetchAll();
 
 $show_header = true;
@@ -59,6 +83,8 @@ require_once __DIR__ . '/../includes/header.php';
     <h2 class="fw-bold"><?php echo e($child_role_name); ?></h2>
     <p class="text-secondary">Manage your <?php echo strtolower(e($child_role_name)); ?></p>
 </div>
+
+<?php render_search_and_filter(); ?>
 
 <?php if (!empty($error)): ?>
     <div class="alert alert-danger py-2"><?php echo e($error); ?></div>

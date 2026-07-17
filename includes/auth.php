@@ -77,6 +77,8 @@ function login_user($username, $password) {
 
         $_SESSION['login_log_id'] = $pdo->lastInsertId();
 
+        log_activity($pdo, $user['id'], 'Login', 'User logged in from IP: ' . $ip);
+
         return ['success' => true];
     }
 
@@ -89,6 +91,8 @@ function logout() {
         $pdo = getDbConnection();
         $stmt = $pdo->prepare("UPDATE login_logs SET logout_time = CURRENT_TIMESTAMP WHERE id = :id");
         $stmt->execute(['id' => $_SESSION['login_log_id']]);
+
+        log_activity($pdo, $_SESSION['user_id'], 'Logout', 'User logged out');
     }
 
     // Unset all session variables

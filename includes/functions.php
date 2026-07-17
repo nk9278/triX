@@ -83,3 +83,15 @@ function generate_username($pdo) {
 function generate_password() {
     return str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
 }
+
+/**
+ * Log user activity.
+ */
+function log_activity($pdo, $user_id, $action, $description = '') {
+    $stmt = $pdo->prepare("INSERT INTO activity_logs (user_id, action, description) VALUES (:user_id, :action, :description)");
+    $stmt->execute([
+        'user_id' => $user_id,
+        'action' => $action,
+        'description' => $description
+    ]);
+}
