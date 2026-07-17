@@ -4,19 +4,19 @@
     <!-- Bottom Navigation Placeholder -->
     <nav class="bottom-nav fixed-bottom">
         <div class="d-flex justify-content-around align-items-center h-100">
-            <a href="/index.php" class="nav-item text-center text-decoration-none text-white active">
+            <a href="index.php" class="nav-item text-center text-decoration-none text-white active">
                 <i class="bi bi-house-door-fill fs-4"></i>
                 <div class="small">Home</div>
             </a>
-            <a href="#" class="nav-item text-center text-decoration-none text-secondary">
-                <i class="bi bi-search fs-4"></i>
-                <div class="small">Search</div>
+            <a href="wallet.php" class="nav-item text-center text-decoration-none text-secondary">
+                <i class="bi bi-wallet2 fs-4"></i>
+                <div class="small">Wallet</div>
             </a>
-            <a href="#" class="nav-item text-center text-decoration-none text-secondary">
-                <i class="bi bi-grid-fill fs-4"></i>
-                <div class="small">Menu</div>
+            <a href="logs.php" class="nav-item text-center text-decoration-none text-secondary">
+                <i class="bi bi-clock-history fs-4"></i>
+                <div class="small">History</div>
             </a>
-            <a href="#" class="nav-item text-center text-decoration-none text-secondary">
+            <a href="profile.php" class="nav-item text-center text-decoration-none text-secondary">
                 <i class="bi bi-person-fill fs-4"></i>
                 <div class="small">Profile</div>
             </a>

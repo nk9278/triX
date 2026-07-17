@@ -54,6 +54,9 @@ if (session_status() === PHP_SESSION_NONE) {
                         <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="/index.php"><i class="bi bi-house-door me-2"></i> Dashboard</a>
                     </li>
                     <li class="nav-item mb-2">
+                        <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="wallet.php"><i class="bi bi-wallet2 me-2"></i> Wallet</a>
+                    </li>
+                    <li class="nav-item mb-2">
                         <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="profile.php"><i class="bi bi-person me-2"></i> Profile</a>
                     </li>
                     <?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] < 6): ?>

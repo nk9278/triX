@@ -3,12 +3,23 @@
  * Shared UI Components
  */
 
-function render_dashboard_card($name, $role_name, $username) {
+function render_dashboard_card($name, $role_name, $username, $wallet = null) {
     ?>
     <div class="mb-4">
         <h2 class="fw-bold">Welcome, <?php echo e($name); ?></h2>
         <p class="text-secondary">Dashboard Overview</p>
     </div>
+
+    <?php if ($wallet): ?>
+    <!-- Wallet Card -->
+    <div class="card p-4 mb-4 bg-primary text-white border-0">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="m-0 text-white-50">Available Balance</h6>
+            <i class="bi bi-wallet2 fs-4"></i>
+        </div>
+        <h2 class="display-6 fw-bold m-0"><?php echo number_format($wallet['balance'], 2); ?> <span class="fs-6 fw-normal text-white-50">Coins</span></h2>
+    </div>
+    <?php endif; ?>
 
     <!-- Main Dashboard Card -->
     <div class="card p-4 mb-4">
@@ -96,6 +107,102 @@ function render_search_and_filter() {
                 <button type="submit" class="btn btn-primary w-100">Filter</button>
             </div>
         </form>
+    </div>
+    <?php
+}
+
+function render_wallet_balance_card($wallet) {
+    ?>
+    <div class="card p-4 mb-4 border-primary border-start border-4 border-0">
+        <h6 class="text-secondary mb-3">Available Balance</h6>
+        <div class="d-flex align-items-center mb-4">
+            <i class="bi bi-wallet2 text-primary me-3" style="font-size: 2.5rem;"></i>
+            <h1 class="display-5 fw-bold text-white mb-0"><?php echo number_format($wallet['balance'], 2); ?></h1>
+        </div>
+        <div class="row g-2">
+            <div class="col-6">
+                <div class="bg-dark-subtle p-2 rounded text-center">
+                    <small class="text-secondary d-block">Received</small>
+                    <span class="text-success fw-bold"><?php echo number_format($wallet['total_received'], 2); ?></span>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="bg-dark-subtle p-2 rounded text-center">
+                    <small class="text-secondary d-block">Sent</small>
+                    <span class="text-danger fw-bold"><?php echo number_format($wallet['total_sent'], 2); ?></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php
+}
+
+function render_transaction_history_filters() {
+    $search = $_GET['search'] ?? '';
+    $period = $_GET['period'] ?? 'all';
+    ?>
+    <div class="card p-3 mb-4">
+        <form method="GET" class="row g-2">
+            <div class="col-12">
+                <input type="text" name="search" class="form-control" placeholder="Search Tx ID or Username" value="<?php echo e($search); ?>">
+            </div>
+            <div class="col-8">
+                <select name="period" class="form-control">
+                    <option value="all" <?php echo $period === 'all' ? 'selected' : ''; ?>>All Time</option>
+                    <option value="today" <?php echo $period === 'today' ? 'selected' : ''; ?>>Today</option>
+                    <option value="yesterday" <?php echo $period === 'yesterday' ? 'selected' : ''; ?>>Yesterday</option>
+                    <option value="7days" <?php echo $period === '7days' ? 'selected' : ''; ?>>Last 7 Days</option>
+                    <option value="30days" <?php echo $period === '30days' ? 'selected' : ''; ?>>Last 30 Days</option>
+                </select>
+            </div>
+            <div class="col-4">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+    <?php
+}
+
+function render_transaction_card($tx, $current_user_id) {
+    $is_sender = ($tx['from_user'] == $current_user_id);
+    $is_generation = ($tx['from_user'] === null);
+
+    $icon = $is_sender ? 'bi-arrow-up-right-circle text-danger' : 'bi-arrow-down-left-circle text-success';
+    $amount_class = $is_sender ? 'text-danger' : 'text-success';
+    $amount_prefix = $is_sender ? '-' : '+';
+
+    if ($is_generation) {
+        $icon = 'bi-plus-circle text-primary';
+        $amount_class = 'text-primary';
+        $amount_prefix = '+';
+    }
+
+    $other_party = $is_sender ? $tx['to_username'] : ($is_generation ? 'System' : $tx['from_username']);
+    ?>
+    <div class="card p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi <?php echo $icon; ?> fs-4"></i>
+                <div>
+                    <div class="text-white fw-bold"><?php echo $is_sender ? 'Sent to' : 'Received from'; ?></div>
+                    <div class="text-secondary small">@<?php echo e($other_party); ?></div>
+                </div>
+            </div>
+            <div class="text-end">
+                <div class="fw-bold fs-5 <?php echo $amount_class; ?>">
+                    <?php echo $amount_prefix . number_format($tx['amount'], 2); ?>
+                </div>
+                <div class="text-secondary small"><?php echo e($tx['transaction_id']); ?></div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-end mt-2 pt-2 border-top border-secondary">
+            <div class="text-secondary small">
+                <?php echo date('M d, Y H:i', strtotime($tx['created_at'])); ?>
+            </div>
+            <?php if (!empty($tx['remark'])): ?>
+                <div class="text-secondary small fst-italic">"<?php echo e($tx['remark']); ?>"</div>
+            <?php endif; ?>
+        </div>
     </div>
     <?php
 }

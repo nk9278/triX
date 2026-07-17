@@ -36,6 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'username' => $new_username,
                 'password' => $hashed_password
             ])) {
+                $new_user_id = $pdo->lastInsertId();
+                $stmt = $pdo->prepare("INSERT INTO wallets (user_id) VALUES (:user_id)");
+                $stmt->execute(['user_id' => $new_user_id]);
                 $success = true;
                 log_activity($pdo, $_SESSION['user_id'], 'Account Created', 'Created new ' . $child_role_name . ' account: ' . $new_username);
             } else {

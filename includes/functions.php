@@ -95,3 +95,83 @@ function log_activity($pdo, $user_id, $action, $description = '') {
         'description' => $description
     ]);
 }
+
+/**
+ * Get user wallet details
+ */
+function get_wallet($pdo, $user_id) {
+    $stmt = $pdo->prepare("SELECT * FROM wallets WHERE user_id = :user_id");
+    $stmt->execute(['user_id' => $user_id]);
+    return $stmt->fetch();
+}
+
+/**
+ * Generate unique transaction ID
+ */
+function generate_transaction_id() {
+    return 'TRX' . time() . mt_rand(1000, 9999);
+}
+
+/**
+ * Execute coin transfer
+ */
+function transfer_coins($pdo, $from_user_id, $to_user_id, $amount, $remark = '') {
+    if ($amount <= 0) return ['success' => false, 'message' => 'Amount must be greater than zero.'];
+
+    try {
+        $pdo->beginTransaction();
+
+        // Lock sender wallet
+        $stmt = $pdo->prepare("SELECT balance FROM wallets WHERE user_id = :user_id FOR UPDATE");
+        $stmt->execute(['user_id' => $from_user_id]);
+        $sender_wallet = $stmt->fetch();
+
+        if (!$sender_wallet || $sender_wallet['balance'] < $amount) {
+            $pdo->rollBack();
+            return ['success' => false, 'message' => 'Insufficient balance.'];
+        }
+
+        // Lock receiver wallet
+        $stmt = $pdo->prepare("SELECT balance FROM wallets WHERE user_id = :user_id FOR UPDATE");
+        $stmt->execute(['user_id' => $to_user_id]);
+        $receiver_wallet = $stmt->fetch();
+
+        if (!$receiver_wallet) {
+            $pdo->rollBack();
+            return ['success' => false, 'message' => 'Receiver wallet not found.'];
+        }
+
+        // Deduct from sender
+        $stmt = $pdo->prepare("UPDATE wallets SET balance = balance - :amount1, total_sent = total_sent + :amount2 WHERE user_id = :user_id");
+        $stmt->execute(['amount1' => $amount, 'amount2' => $amount, 'user_id' => $from_user_id]);
+
+        // Add to receiver
+        $stmt = $pdo->prepare("UPDATE wallets SET balance = balance + :amount1, total_received = total_received + :amount2 WHERE user_id = :user_id");
+        $stmt->execute(['amount1' => $amount, 'amount2' => $amount, 'user_id' => $to_user_id]);
+
+        // Record transaction
+        $tx_id = generate_transaction_id();
+        $stmt = $pdo->prepare("
+            INSERT INTO wallet_transactions (transaction_id, from_user, to_user, amount, opening_balance, closing_balance, remark)
+            VALUES (:tx_id, :from, :to, :amount, :open, :close, :remark)
+        ");
+        $stmt->execute([
+            'tx_id' => $tx_id,
+            'from' => $from_user_id,
+            'to' => $to_user_id,
+            'amount' => $amount,
+            'open' => $receiver_wallet['balance'],
+            'close' => $receiver_wallet['balance'] + $amount,
+            'remark' => $remark
+        ]);
+
+        log_activity($pdo, $from_user_id, 'Coins Sent', "Sent $amount coins to user ID: $to_user_id");
+        log_activity($pdo, $to_user_id, 'Coins Received', "Received $amount coins from user ID: $from_user_id");
+
+        $pdo->commit();
+        return ['success' => true, 'message' => 'Transfer successful.'];
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        return ['success' => false, 'message' => 'Transfer failed due to system error.'];
+    }
+}
