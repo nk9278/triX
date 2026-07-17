@@ -1,6 +1,6 @@
     </div> <!-- End content-wrapper -->
 
-    <?php if(isset($show_bottom_nav) && $show_bottom_nav): ?>
+    <?php if(isset($show_bottom_nav) && $show_bottom_nav && isset($_SESSION['role_id']) && $_SESSION['role_id'] == 6): ?>
     <!-- Bottom Navigation Placeholder -->
     <nav class="bottom-nav fixed-bottom">
         <div class="d-flex justify-content-around align-items-center h-100">

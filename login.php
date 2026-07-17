@@ -3,8 +3,7 @@ require_once __DIR__ . '/includes/auth.php';
 
 // Redirect if already logged in
 if (is_logged_in()) {
-    header("Location: index.php");
-    exit;
+    redirect_based_on_role();
 }
 
 $error = '';
@@ -21,8 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $result = login_user($username, $password);
             if ($result['success']) {
-                header("Location: index.php");
-                exit;
+                redirect_based_on_role();
             } else {
                 $error = $result['message'];
             }

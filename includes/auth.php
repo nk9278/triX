@@ -112,3 +112,35 @@ function has_role($role_id) {
     if (!is_logged_in()) return false;
     return $_SESSION['role_id'] == $role_id;
 }
+
+// Get the base directory for a given role ID
+function get_role_directory($role_id) {
+    switch ($role_id) {
+        case 1: return '/superadmin/';
+        case 2: return '/admin/';
+        case 3: return '/manager/';
+        case 4: return '/superagent/';
+        case 5: return '/agent/';
+        case 6: return '/user/';
+        default: return '/login.php';
+    }
+}
+
+// Redirect user to their respective dashboard based on role
+function redirect_based_on_role() {
+    if (is_logged_in()) {
+        $dir = get_role_directory($_SESSION['role_id']);
+        header("Location: " . BASE_URL . ltrim($dir, '/'));
+        exit;
+    }
+}
+
+// Require a specific role to access a page
+function require_role($allowed_role_id) {
+    require_login();
+
+    if (!has_role($allowed_role_id)) {
+        // Unauthorized access, redirect to their own dashboard
+        redirect_based_on_role();
+    }
+}

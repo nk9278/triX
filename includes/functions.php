@@ -53,3 +53,33 @@ function get_ip_address() {
 function get_device_info() {
     return isset($_SERVER['HTTP_USER_AGENT']) ? substr($_SERVER['HTTP_USER_AGENT'], 0, 255) : 'Unknown';
 }
+
+/**
+ * Generate a unique username.
+ * Format: T + 4 random digits.
+ * Check database to ensure uniqueness.
+ */
+function generate_username($pdo) {
+    $is_unique = false;
+    $username = '';
+
+    while (!$is_unique) {
+        $digits = str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
+        $username = 'T' . $digits;
+
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE username = :username");
+        $stmt->execute(['username' => $username]);
+        if (!$stmt->fetch()) {
+            $is_unique = true;
+        }
+    }
+
+    return $username;
+}
+
+/**
+ * Generate a random 4-digit numeric password.
+ */
+function generate_password() {
+    return str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
+}

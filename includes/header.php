@@ -53,6 +53,20 @@ if (session_status() === PHP_SESSION_NONE) {
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="/index.php"><i class="bi bi-house-door me-2"></i> Dashboard</a>
                     </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="profile.php"><i class="bi bi-person me-2"></i> Profile</a>
+                    </li>
+                    <?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] < 6): ?>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="users.php"><i class="bi bi-people me-2"></i> Users</a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="create.php"><i class="bi bi-person-plus me-2"></i> Create</a>
+                    </li>
+                    <?php endif; ?>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="logs.php"><i class="bi bi-clock-history me-2"></i> Login Logs</a>
+                    </li>
                     <li class="nav-item mt-5">
                         <a class="nav-link text-danger rounded p-3 bg-dark-subtle" href="/logout.php"><i class="bi bi-box-arrow-right me-2"></i> Logout</a>
                     </li>
