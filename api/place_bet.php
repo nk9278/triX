@@ -57,6 +57,15 @@ try {
         throw new Exception("Cannot bet on a completed match.");
     }
 
+    // Phase 7: Fetch betting lock settings
+    $stmt = $pdo->query("SELECT min_bet, max_bet FROM settings LIMIT 1");
+    $settings = $stmt->fetch();
+
+    if ($settings) {
+        if ($amount < $settings['min_bet']) throw new Exception("Amount is below minimum bet limit.");
+        if ($amount > $settings['max_bet']) throw new Exception("Amount exceeds maximum bet limit.");
+    }
+
     $stmt = $pdo->prepare("SELECT balance FROM wallets WHERE user_id = ? FOR UPDATE");
     $stmt->execute([$user_id]);
     $wallet = $stmt->fetch();

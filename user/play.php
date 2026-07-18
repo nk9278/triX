@@ -34,7 +34,7 @@ $balance = $wallet ? $wallet['balance'] : 0.00;
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading matches...</span>
             </div>
-            <p class="mt-2">Loading Live Matches...</p>
+            <p class="mt-2">Loading Matches...</p>
         </div>
     </div>
 </div>
@@ -56,14 +56,17 @@ function loadMatches() {
             }
 
             if (data.matches.length === 0) {
-                container.innerHTML = `<div class="col-12"><div class="alert alert-info">No live or upcoming matches found.</div></div>`;
+                container.innerHTML = `<div class="col-12"><div class="alert alert-info">No playable matches found.</div></div>`;
                 return;
             }
 
             let html = '';
             data.matches.forEach(match => {
-                const isLive = match.status === 'live';
-                const statusBadge = isLive ? `<span class="badge bg-danger pulse">LIVE</span>` : `<span class="badge bg-secondary">Upcoming</span>`;
+                const isLive = (match.status === 'live' && match.is_settled == 0);
+                const isSettled = match.is_settled == 1;
+                let statusBadge = isLive ? `<span class="badge bg-danger pulse">LIVE</span>` : `<span class="badge bg-secondary">Upcoming</span>`;
+                if (isSettled) statusBadge = `<span class="badge bg-primary">Completed</span>`;
+
                 const matchTime = new Date(match.start_time).toLocaleString();
 
                 html += `
@@ -74,6 +77,13 @@ function loadMatches() {
                         </div>
                         <div class="card-body">
                             <h6 class="card-title text-center mb-4">${match.title}</h6>
+
+                            <!-- Phase 7 UI Implementation for Live Score display -->
+                            <div id="live-score-${match.id}" class="text-center mb-3 text-muted small d-none">
+                                <span id="score-runs-${match.id}"></span>/<span id="score-wickets-${match.id}"></span>
+                                (<span id="score-overs-${match.id}"></span> overs)
+                                RR: <span id="score-rr-${match.id}"></span>
+                            </div>
 
                             <div class="row text-center mb-3">
                                 <div class="col-4">
@@ -128,6 +138,11 @@ function loadMatches() {
                     </div>
                 </div>
                 `;
+
+                // Fetch live score independently
+                if(isLive) {
+                    syncLiveScore(match.id);
+                }
             });
 
             container.innerHTML = html;
@@ -135,6 +150,20 @@ function loadMatches() {
         .catch(err => {
             console.error(err);
             document.getElementById('matches-container').innerHTML = `<div class="col-12"><div class="alert alert-danger">Error loading matches.</div></div>`;
+        });
+}
+
+function syncLiveScore(matchId) {
+    fetch(`../api/sync_live.php?match_id=${matchId}`)
+        .then(response => response.json())
+        .then(data => {
+            if(data.success && data.score) {
+                document.getElementById(`live-score-${matchId}`).classList.remove('d-none');
+                document.getElementById(`score-runs-${matchId}`).innerText = data.score.runs;
+                document.getElementById(`score-wickets-${matchId}`).innerText = data.score.wickets;
+                document.getElementById(`score-overs-${matchId}`).innerText = data.score.overs;
+                document.getElementById(`score-rr-${matchId}`).innerText = data.score.run_rate;
+            }
         });
 }
 
