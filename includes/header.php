@@ -51,7 +51,8 @@ if (session_status() === PHP_SESSION_NONE) {
                 </div>
                 <ul class="nav flex-column">
                     <li class="nav-item mb-2">
-                        <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="/index.php"><i class="bi bi-house-door me-2"></i> Dashboard</a>
+                        <?php $dashboard = get_role_directory($_SESSION['role_id']); ?>
+                        <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="<?php echo BASE_URL . ltrim($dashboard, '/'); ?>"><i class="bi bi-house-door me-2"></i> Dashboard</a>
                     </li>
                     <li class="nav-item mb-2">
                         <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="wallet.php"><i class="bi bi-wallet2 me-2"></i> Wallet</a>
@@ -61,10 +62,14 @@ if (session_status() === PHP_SESSION_NONE) {
                     </li>
                     <?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] < 6): ?>
                     <li class="nav-item mb-2">
+                        <?php if ($_SESSION['role_id'] != 6): ?>
                         <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="users.php"><i class="bi bi-people me-2"></i> Users</a>
+                        <?php endif; ?>
                     </li>
                     <li class="nav-item mb-2">
+                        <?php if ($_SESSION['role_id'] != 6): ?>
                         <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="create.php"><i class="bi bi-person-plus me-2"></i> Create</a>
+                        <?php endif; ?>
                     </li>
                     <?php endif; ?>
                     <li class="nav-item mb-2">
@@ -72,7 +77,9 @@ if (session_status() === PHP_SESSION_NONE) {
                     </li>
                     <?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] < 6): ?>
                     <li class="nav-item mb-2">
+                        <?php if ($_SESSION['role_id'] != 6): ?>
                         <a class="nav-link text-white rounded p-3 bg-dark-subtle" href="settings.php"><i class="bi bi-gear me-2"></i> Settings</a>
+                        <?php endif; ?>
                     </li>
                     <?php endif; ?>
                     <li class="nav-item mt-5">

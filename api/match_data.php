@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id'])) {
 $game_id = isset($_GET['game_id']) ? (int)$_GET['game_id'] : 0;
 
 $pdo = getDbConnection();
-$stmt = $pdo->prepare("SELECT id, title, start_time, status FROM matches WHERE game_id = ? AND status IN ('upcoming', 'live') ORDER BY start_time ASC");
+$stmt = $pdo->prepare("SELECT id, title, start_time, status, is_settled FROM matches WHERE game_id = ? AND status IN ('upcoming', 'live') AND is_settled = 0 ORDER BY start_time ASC");
 $stmt->execute([$game_id]);
 $matches = $stmt->fetchAll();
 

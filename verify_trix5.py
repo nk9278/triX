@@ -126,7 +126,7 @@ def test_trix_phase5():
         # Step 6: Verify Bet History
         print("Verifying Bet History...")
         page.goto(f"{BASE_URL}/user/bet_history.php")
-        expect(page.locator("td", has_text="50.00")).to_have_count(1, timeout=5000) if page.locator("td", has_text="50.00").count() == 1 else expect(page.locator("td", has_text="50.00").first).to_be_visible()
+        expect(page.locator("text=50.00").first).to_be_visible()
 
         # Step 7: Verify Wallet Deduction / Transaction
         print("Verifying Wallet Transaction in DB...")

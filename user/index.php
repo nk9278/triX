@@ -1,40 +1,24 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/components.php';
+require_role(6); // User Role
 
-// Super Admin is Role 1
-require_role(6);
-
-// Get Dashboard Stats
 $pdo = getDbConnection();
-$stats = [
-    'total' => 0,
-    'active' => 0,
-    'inactive' => 0,
-    'today' => 0
-];
 
-$stmt = $pdo->prepare("SELECT status, created_at FROM users WHERE parent_id = :parent_id");
-$stmt->execute(['parent_id' => $_SESSION['user_id']]);
-$users = $stmt->fetchAll();
+// Get Wallet Balance
+$stmt = $pdo->prepare("SELECT balance FROM wallets WHERE user_id = :user_id");
+$stmt->execute(['user_id' => $_SESSION['user_id']]);
+$wallet = $stmt->fetch();
+$balance = $wallet ? $wallet['balance'] : 0.00;
 
-$today = date('Y-m-d');
-foreach ($users as $u) {
-    $stats['total']++;
-    if ($u['status'] === 'active') {
-        $stats['active']++;
-    } else {
-        $stats['inactive']++;
-    }
-
-    if (strpos($u['created_at'], $today) === 0) {
-        $stats['today']++;
-    }
-}
+// Get Active Bets Count
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM bets WHERE user_id = :user_id AND status = 'pending'");
+$stmt->execute(['user_id' => $_SESSION['user_id']]);
+$active_bets = $stmt->fetchColumn();
 
 // Get Recent Activity
-$actStmt = $pdo->prepare("SELECT action, description, created_at FROM activity_logs WHERE user_id IN (SELECT id FROM users WHERE parent_id = :parent_id1) OR user_id = :parent_id2 ORDER BY id DESC LIMIT 10");
-$actStmt->execute(['parent_id1' => $_SESSION['user_id'], 'parent_id2' => $_SESSION['user_id']]);
+$actStmt = $pdo->prepare("SELECT action, description, created_at FROM activity_logs WHERE user_id = :user_id ORDER BY id DESC LIMIT 5");
+$actStmt->execute(['user_id' => $_SESSION['user_id']]);
 $activities = $actStmt->fetchAll();
 
 $show_header = true;
@@ -45,43 +29,67 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="dashboard-content">
     <?php render_dashboard_card($_SESSION['name'], 'User', $_SESSION['username']); ?>
 
-    <!-- Stats Grid -->
-    <h6 class="text-secondary mb-3">Overview</h6>
+    <!-- User Stats -->
     <div class="row g-3 mb-4">
         <div class="col-6">
-            <div class="card p-3 text-center h-100 border-primary border-start border-4 border-0">
-                <div class="fs-3 fw-bold text-white"><?php echo $stats['total']; ?></div>
-                <div class="small text-secondary">Total Members</div>
-            </div>
-        </div>
-        <div class="col-6">
             <div class="card p-3 text-center h-100 border-success border-start border-4 border-0">
-                <div class="fs-3 fw-bold text-success"><?php echo $stats['active']; ?></div>
-                <div class="small text-secondary">Active</div>
+                <div class="fs-4 fw-bold text-success">🪙 <?php echo number_format($balance, 2); ?></div>
+                <div class="small text-secondary">Wallet Balance</div>
             </div>
         </div>
         <div class="col-6">
-            <div class="card p-3 text-center h-100 border-danger border-start border-4 border-0">
-                <div class="fs-3 fw-bold text-danger"><?php echo $stats['inactive']; ?></div>
-                <div class="small text-secondary">Inactive</div>
+            <div class="card p-3 text-center h-100 border-primary border-start border-4 border-0">
+                <div class="fs-4 fw-bold text-primary"><?php echo $active_bets; ?></div>
+                <div class="small text-secondary">Active Bets</div>
             </div>
         </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <h6 class="text-secondary mb-3">Quick Actions</h6>
+    <div class="row g-3 mb-4">
         <div class="col-6">
-            <div class="card p-3 text-center h-100 border-info border-start border-4 border-0">
-                <div class="fs-3 fw-bold text-info"><?php echo $stats['today']; ?></div>
-                <div class="small text-secondary">New Today</div>
-            </div>
+            <a href="games.php" class="text-decoration-none">
+                <div class="card p-3 text-center h-100 bg-primary text-white border-0">
+                    <i class="bi bi-controller fs-2 mb-2"></i>
+                    <div class="fw-bold">Play Games</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6">
+            <a href="bets.php" class="text-decoration-none">
+                <div class="card p-3 text-center h-100 bg-info text-white border-0">
+                    <i class="bi bi-ticket-detailed fs-2 mb-2"></i>
+                    <div class="fw-bold">My Bets</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6">
+            <a href="bet_history.php" class="text-decoration-none">
+                <div class="card p-3 text-center h-100 bg-secondary text-white border-0">
+                    <i class="bi bi-clock-history fs-2 mb-2"></i>
+                    <div class="fw-bold">Bet History</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6">
+            <a href="wallet.php" class="text-decoration-none">
+                <div class="card p-3 text-center h-100 bg-warning text-dark border-0">
+                    <i class="bi bi-wallet2 fs-2 mb-2"></i>
+                    <div class="fw-bold">Wallet</div>
+                </div>
+            </a>
         </div>
     </div>
 
     <!-- Recent Activity -->
     <h6 class="text-secondary mb-3">Recent Activity</h6>
     <?php if (empty($activities)): ?>
-        <div class="card p-4 text-center mb-4">
+        <div class="card p-4 text-center mb-5">
             <p class="text-secondary mb-0">No recent activity.</p>
         </div>
     <?php else: ?>
-        <div class="card mb-4">
+        <div class="card mb-5">
             <div class="list-group list-group-flush bg-transparent">
                 <?php foreach ($activities as $act): ?>
                 <div class="list-group-item bg-transparent border-secondary text-white py-3">
