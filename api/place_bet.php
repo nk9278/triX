@@ -80,7 +80,7 @@ try {
     $open_bal = (float)$wallet['balance'];
     $close_bal = $open_bal - $amount;
 
-    $stmt = $pdo->prepare("INSERT INTO wallet_transactions (transaction_id, from_user, to_user, amount, opening_balance, closing_balance, remark) VALUES (:tx_id, :from, :to, :amount, :open, :close, :remark)");
+    $stmt = $pdo->prepare("INSERT INTO wallet_transactions (transaction_id, from_user, to_user, amount, opening_balance, closing_balance, transaction_type, match_id, bet_id, remark) VALUES (:tx_id, :from, :to, :amount, :open, :close, :tx_type, :match_id, :bet_id, :remark)");
     $stmt->execute([
         'tx_id' => $tx_id,
         'from' => $user_id,
@@ -88,6 +88,9 @@ try {
         'amount' => $amount,
         'open' => $open_bal,
         'close' => $close_bal,
+        'tx_type' => 'Bet Placement',
+        'match_id' => $match_id,
+        'bet_id' => $bet_id,
         'remark' => "Bet Placement (Match $match_id)"
     ]);
 

@@ -32,6 +32,23 @@ foreach ($users as $u) {
     }
 }
 
+// Phase 6 specific stats
+$stmt_p6 = $pdo->query("SELECT COUNT(*) as cnt FROM settlements WHERE DATE(processed_at) = CURDATE()");
+$settlements_today = $stmt_p6->fetch()['cnt'];
+
+$stmt_p6 = $pdo->query("SELECT COUNT(*) as cnt FROM matches WHERE status = 'completed' AND is_settled = 0");
+$pending_settlements = $stmt_p6->fetch()['cnt'];
+
+$stmt_p6 = $pdo->query("SELECT SUM(total_payout) as paid, SUM(total_refund) as refund FROM settlements");
+$p6_totals = $stmt_p6->fetch();
+$total_paid = $p6_totals['paid'] ?: 0.00;
+
+// Total retained is total_bets_amount - (total_payout + total_refund). We can compute this from settlement_details.
+$stmt_p6 = $pdo->query("SELECT SUM(bet_amount) as bet_total FROM settlement_details");
+$bet_total = $stmt_p6->fetch()['bet_total'] ?: 0.00;
+$total_retained = $bet_total - $p6_totals['paid'] - $p6_totals['refund'];
+
+
 // Get Recent Activity
 $actStmt = $pdo->prepare("SELECT action, description, created_at FROM activity_logs WHERE user_id IN (SELECT id FROM users WHERE parent_id = :parent_id1) OR user_id = :parent_id2 ORDER BY id DESC LIMIT 10");
 $actStmt->execute(['parent_id1' => $_SESSION['user_id'], 'parent_id2' => $_SESSION['user_id']]);
@@ -70,6 +87,34 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="card p-3 text-center h-100 border-info border-start border-4 border-0">
                 <div class="fs-3 fw-bold text-info"><?php echo $stats['today']; ?></div>
                 <div class="small text-secondary">New Today</div>
+            </div>
+        </div>
+    </div>
+
+    <h6 class="text-secondary mb-3">Settlement Stats</h6>
+    <div class="row g-3 mb-4">
+        <div class="col-6">
+            <div class="card p-3 text-center h-100 border-warning border-start border-4 border-0">
+                <div class="fs-3 fw-bold text-warning"><?php echo $pending_settlements; ?></div>
+                <div class="small text-secondary">Pending Settlements</div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="card p-3 text-center h-100 border-info border-start border-4 border-0">
+                <div class="fs-3 fw-bold text-info"><?php echo $settlements_today; ?></div>
+                <div class="small text-secondary">Today's Settlements</div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="card p-3 text-center h-100 border-success border-start border-4 border-0">
+                <div class="fs-5 fw-bold text-success"><?php echo number_format($total_paid, 2); ?></div>
+                <div class="small text-secondary">Total Coins Paid</div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="card p-3 text-center h-100 border-primary border-start border-4 border-0">
+                <div class="fs-5 fw-bold text-primary"><?php echo number_format($total_retained, 2); ?></div>
+                <div class="small text-secondary">Total Coins Retained</div>
             </div>
         </div>
     </div>
